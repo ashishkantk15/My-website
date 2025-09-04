@@ -1,135 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mannu ke liye ek Surprise!</title>
+    <title>Pepsi Masti</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for a stylish look -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Great+Vibes&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    
+    <!-- Google Fonts for a nice look -->
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom fonts */
+        /* Custom styles for the page */
         body {
-            font-family: 'Poppins', sans-serif;
-            overflow: hidden; /* Prevents scrollbars from the roses */
+            font-family: 'Mukta', sans-serif;
+            /* A cool gradient background */
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
         }
-        .font-great-vibes {
-            font-family: 'Great Vibes', cursive;
-        }
-        .font-dancing-script {
-            font-family: 'Dancing Script', cursive;
-        }
-
-        /* Rose animation keyframes */
-        @keyframes fall {
-            0% {
-                transform: translateY(-100vh) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 1;
-            }
+        
+        /* Glass effect for the card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        /* Individual rose style */
-        .rose {
-            position: absolute;
-            font-size: 2rem;
-            color: #ff4757;
-            animation: fall linear infinite;
-            top: -50px; /* Start from above the screen */
-            pointer-events: none; /* Roses should not be clickable */
+        /* Styling for the button */
+        .pepsi-btn {
+            background: linear-gradient(90deg, #0062be, #e61d2b);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        /* Hover effect for the button */
+        .pepsi-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #e61d2b, 0 0 15px #0062be;
+        }
+        
+        /* Floating animation for the soda can */
+        .soda-can {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Shake animation for the card on button click */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <!-- Screen 1: The Adventure Start -->
-    <div id="adventure-screen" class="min-h-screen flex flex-col items-center justify-center text-center p-4 transition-opacity duration-1000">
-        <div class="bg-black bg-opacity-50 p-8 rounded-2xl shadow-2xl backdrop-blur-sm border border-gray-700">
-            <h1 class="text-4xl md:text-6xl font-dancing-script text-pink-400 mb-4 animate-pulse">Hey Mannu!</h1>
-            <p class="text-lg md:text-2xl mb-8 text-gray-300">Tumhare liye ek chhota sa adventure hai...</p>
-            <p class="text-md md:text-xl mb-8 text-gray-300">Kya tum taiyaar ho?</p>
-            <!-- Button to reveal the surprise -->
-            <button id="start-adventure-btn" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-110">
-                Adventure Shuru Karein!
-            </button>
+    <div id="mainCard" class="glass-card text-center p-8 w-full max-w-md">
+        <!-- A cool SVG icon of a soda can that floats -->
+        <div class="soda-can mb-6">
+            <svg class="w-24 h-24 mx-auto" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="canGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#f9fafb;stop-opacity:1" />
+                        <stop offset="10%" style="stop-color:#e5e7eb;stop-opacity:1" />
+                        <stop offset="90%" style="stop-color:#f3f4f6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#f9fafb;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="49%" style="stop-color:#e61d2b;stop-opacity:1" />
+                        <stop offset="51%" style="stop-color:#0062be;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect x="25" y="10" width="50" height="80" rx="10" fill="url(#canGradient)"/>
+                <ellipse cx="50" cy="10" rx="25" ry="5" fill="#e5e7eb"/>
+                <ellipse cx="50" cy="90" rx="25" ry="5" fill="#d1d5db"/>
+                <circle cx="50" cy="50" r="20" fill="url(#logoGradient)"/>
+                <path d="M 38 50 C 38 40, 62 40, 62 50 C 62 60, 38 60, 38 50 Z" fill="white"/>
+            </svg>
         </div>
-    </div>
 
-    <!-- Screen 2: The Rose Pool Birthday Wish -->
-    <div id="birthday-screen" class="min-h-screen flex flex-col items-center justify-center p-4 transition-opacity duration-1000 opacity-0 absolute top-0 left-0 w-full h-full" style="display: none;">
-        <!-- This container will hold the falling roses -->
-        <div id="rose-container" class="absolute top-0 left-0 w-full h-full overflow-hidden z-0"></div>
-        
-        <!-- Birthday Message Card -->
-        <div class="relative z-10 text-center bg-white bg-opacity-20 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl border border-white border-opacity-30">
-            <h1 class="text-6xl md:text-8xl lg:text-9xl font-great-vibes text-white" style="text-shadow: 0 0 15px #ff4757, 0 0 25px #ff4757;">
-                Happy Birthday
-            </h1>
-            <h2 class="text-5xl md:text-7xl font-dancing-script text-pink-300 mt-4" style="text-shadow: 0 0 10px #000;">
-                Mannu
-            </h2>
-            <p class="text-lg md:text-xl text-white mt-8">
-                Tumhari zindagi hamesha in gulaabon ki tarah mehekti rahe! ❤️
-            </p>
+        <h1 class="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
+            Do Rupay Ki Pepsi
+        </h1>
+        <p class="text-lg text-gray-300 mt-2 mb-8 drop-shadow-md">
+            Arnab aur Subham Bhai Sexy
+        </p>
+
+        <!-- The main button -->
+        <button id="pepsiButton" class="pepsi-btn text-white font-bold py-3 px-8 rounded-full text-lg w-full">
+            Yahan Click Karo!
+        </button>
+
+        <!-- A hidden message div that appears on click -->
+        <div id="message" class="h-8 mt-6 text-xl font-semibold text-transparent transition-all duration-500">
+            <!-- Message will appear here via JavaScript -->
         </div>
     </div>
 
     <script>
-        const adventureScreen = document.getElementById('adventure-screen');
-        const birthdayScreen = document.getElementById('birthday-screen');
-        const startButton = document.getElementById('start-adventure-btn');
-        const roseContainer = document.getElementById('rose-container');
+        // JavaScript for interactivity
+        const pepsiButton = document.getElementById('pepsiButton');
+        const messageDiv = document.getElementById('message');
+        const mainCard = document.getElementById('mainCard');
+        
+        // Some fun messages to show on click
+        const messages = [
+            "Poora system hila denge!",
+            "Code check kar, sexy hai na?",
+            "Thanda matlab... Pepsi!",
+            "Cheers, Arnab & Subham Bhai!",
+            "Coding ka nasha!"
+        ];
+        let currentMessageIndex = 0;
 
-        // Function to create a single rose emoji
-        function createRose() {
-            const rose = document.createElement('div');
-            rose.classList.add('rose');
-            rose.innerHTML = '🌹';
+        // Event listener for the button click
+        pepsiButton.addEventListener('click', () => {
+            // Show a message
+            messageDiv.classList.remove('text-transparent');
+            messageDiv.classList.add('text-white');
+            messageDiv.innerText = messages[currentMessageIndex];
             
-            // Randomize horizontal position, animation duration, and delay
-            rose.style.left = `${Math.random() * 100}vw`;
-            const duration = Math.random() * 5 + 5; // Duration between 5s and 10s
-            rose.style.animationDuration = `${duration}s`;
-            rose.style.animationDelay = `${Math.random() * 5}s`; // Delay up to 5s
-            
-            roseContainer.appendChild(rose);
+            // Move to the next message for the next click
+            currentMessageIndex = (currentMessageIndex + 1) % messages.length;
 
-            // Remove the rose from DOM after the animation completes to save memory
+            // Add a fun shake effect to the card
+            mainCard.classList.add('animate-shake');
             setTimeout(() => {
-                rose.remove();
-            }, (duration + 5) * 1000); 
-        }
-
-        // Event listener for the adventure button
-        startButton.addEventListener('click', () => {
-            // Fade out the adventure screen
-            adventureScreen.style.opacity = '0';
-            
-            setTimeout(() => {
-                adventureScreen.style.display = 'none';
-                
-                // Show and fade in the birthday screen
-                document.body.classList.remove('bg-gray-900');
-                document.body.classList.add('bg-gradient-to-br', 'from-pink-500', 'to-red-600');
-                birthdayScreen.style.display = 'flex';
-                
-                // Use another timeout to ensure display property is set before changing opacity
-                setTimeout(() => {
-                    birthdayScreen.style.opacity = '1';
-                }, 50);
-
-                // Start creating the "rose pool" by generating roses at intervals
-                setInterval(createRose, 200); // Create a new rose every 200ms
-
-            }, 1000); // Wait for fade-out animation to complete
+                mainCard.classList.remove('animate-shake');
+            }, 500);
         });
     </script>
+
 </body>
 </html>
