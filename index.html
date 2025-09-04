@@ -42,6 +42,9 @@
 </head>
 <body class="animated-gradient">
 
+    <!-- TEST: Yeh line check karegi ki config mil raha hai ya nahi -->
+    <div id="debug-info" class="absolute top-2 left-2 bg-yellow-300 text-black p-2 rounded-lg text-xs font-mono z-50"></div>
+
     <!-- Connecting State -->
     <div id="connecting-container" class="flex flex-col items-center justify-center h-screen">
         <div class="text-center">
@@ -112,6 +115,7 @@
         const chatMessages = document.getElementById('chat-messages');
         const messageInput = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
+        const debugInfo = document.getElementById('debug-info'); // Debug div ko select karo
         
         let messagesCollection;
         let currentUserName = '';
@@ -120,6 +124,14 @@
         // Yeh function app ko Firebase se connect karne ki koshish karega
         async function initializeFirebase() {
             try {
+                // TEST: Screen par dikhao ki config hai ya nahi
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    debugInfo.textContent = 'Config FOUND! ✅ Trying to connect...';
+                } else {
+                    debugInfo.textContent = 'Config NOT FOUND! ❌ Connection will fail.';
+                    debugInfo.classList.add('bg-red-500', 'text-white');
+                }
+
                 // Check if Firebase config is available from the platform
                 if (typeof __firebase_config === 'undefined' || !__firebase_config) {
                     throw new Error("Website configuration missing.");
@@ -264,3 +276,4 @@
     </script>
 </body>
 </html>
+
