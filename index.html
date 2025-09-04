@@ -1,209 +1,266 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Solar System Simulation</title>
+    <title>Personal Chat ❤️</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Basic styling */
+        /* Custom Styles */
         body {
-            margin: 0;
-            overflow: hidden; /* Canvas ko full screen rakhega */
-            background-color: #000000;
-            color: white;
-            font-family: Arial, sans-serif;
+            color: #E5E7EB; /* Light gray text */
         }
-        canvas {
-            display: block; /* Extra space remove karne ke liye */
+        /* Animated Gradient Background */
+        .animated-gradient {
+            background: linear-gradient(-45deg, #111827, #1f2937, #374151, #4b5563);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
         }
-        #info {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            text-align: center;
-            z-index: 100;
-            display: block;
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        #info h1 {
-            margin: 0;
-            font-size: 2em;
+        /* Scrollbar styling */
+        #chat-messages::-webkit-scrollbar { width: 8px; }
+        #chat-messages::-webkit-scrollbar-track { background: transparent; }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+            border-radius: 20px;
+            border: 2px solid #1f2937;
         }
-        #info p {
-            margin: 5px;
-            font-size: 1.2em;
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
-<body>
+<body class="animated-gradient">
 
-    <div id="info">
-        <h1>Apna Solar System</h1>
-        <p>Mouse se drag karke ghumaayein, scroll karke zoom karein.</p>
+    <!-- Connecting State -->
+    <div id="connecting-container" class="flex flex-col items-center justify-center h-screen">
+        <div class="text-center">
+            <i class="fas fa-circle-notch fa-spin text-4xl text-pink-500"></i>
+            <h1 class="text-2xl mt-4">Connecting to Chat Server...</h1>
+            <p id="connection-error" class="text-red-400 mt-2"></p>
+        </div>
     </div>
 
-    <!-- Three.js library ko import kar rahe hain -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- OrbitControls se user camera control kar paayega -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Login Section -->
+    <div id="login-container" class="hidden items-center justify-center h-screen">
+        <div class="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-700">
+            <h1 class="text-3xl font-bold text-center mb-2">Private Chat Room</h1>
+            <p class="text-center text-gray-400 mb-6">❤️</p>
+            <div class="space-y-4">
+                <input type="text" id="name" placeholder="Apna Naam Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
+                <input type="password" id="secret-code" placeholder="Secret Code Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
+            </div>
+            <button id="login-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg mt-6 transition duration-300">Enter Karo</button>
+            <p id="error-msg" class="text-red-400 text-center mt-4 h-4"></p>
+        </div>
+    </div>
 
-    <script>
+    <!-- Chat Section (Initially Hidden) -->
+    <div id="chat-container" class="hidden h-screen flex flex-col">
+        <header class="bg-gray-800/50 backdrop-blur-sm p-4 shadow-md flex justify-between items-center border-b border-gray-700">
+            <h1 class="text-2xl font-bold text-pink-500">Private Chat</h1>
+            <p id="welcome-msg" class="text-gray-300"></p>
+        </header>
+
+        <main id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
+            <!-- Messages will be dynamically inserted here -->
+        </main>
+
+        <footer class="bg-gray-800/50 backdrop-blur-sm p-4 border-t border-gray-700">
+            <div class="flex items-center space-x-2">
+                <input type="text" id="message-input" placeholder="Message likho..." class="flex-1 bg-gray-700 text-white p-3 rounded-full border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
+                <button id="send-btn" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-300 flex-shrink-0">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
         // ===================================
-        // 1. SCENE, CAMERA, AUR RENDERER SETUP
+        // SCRIPT LOGIC
         // ===================================
+        
+        // --- CONFIGURATION ---
+        const SECRET_CODE = "mylove123"; // YEH SECRET CODE SIRF AAPKO AUR AAPKI GF KO PATA HONA CHAHIYE
+        
+        // --- DOM ELEMENTS ---
+        const connectingContainer = document.getElementById('connecting-container');
+        const connectionError = document.getElementById('connection-error');
+        const loginContainer = document.getElementById('login-container');
+        const chatContainer = document.getElementById('chat-container');
+        const loginBtn = document.getElementById('login-btn');
+        const nameInput = document.getElementById('name');
+        const secretCodeInput = document.getElementById('secret-code');
+        const errorMsg = document.getElementById('error-msg');
+        const welcomeMsg = document.getElementById('welcome-msg');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        let messagesCollection;
+        let currentUserName = '';
 
-        // Scene ek container hai jisme sab kuch (planets, lights, etc.) rakha jaata hai.
-        const scene = new THREE.Scene();
+        // --- FIREBASE INITIALIZATION ---
+        // Yeh function app ko Firebase se connect karne ki koshish karega
+        async function initializeFirebase() {
+            try {
+                // Check if Firebase config is available from the platform
+                if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                    throw new Error("Website configuration missing.");
+                }
 
-        // PerspectiveCamera insani aankh ki tarah cheezon ko dekhta hai.
-        // Parameters: (Field of View, Aspect Ratio, Near Clipping Plane, Far Clipping Plane)
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 50; // Camera ko thoda peeche set kar rahe hain.
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-chat-app';
+                const firebaseConfig = JSON.parse(__firebase_config);
 
-        // WebGLRenderer scene ko browser me draw karta hai.
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement); // Renderer ko HTML body me add kar rahe hain.
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const auth = getAuth(app);
 
-        // ===================================
-        // 2. CONTROLS
-        // ===================================
+                // Sign in the user (required to access Firestore)
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // Set up the reference to our private chat collection
+                const collectionName = `private-chat-${SECRET_CODE}`;
+                messagesCollection = collection(db, `/artifacts/${appId}/public/data/${collectionName}`);
+                
+                // Connection successful, show login screen
+                connectingContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+                loginContainer.classList.add('flex');
 
-        // OrbitControls user ko mouse se camera control karne ki azaadi deta hai.
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; // Smooth camera movement ke liye.
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                // Agar connection fail hota hai, toh saaf error dikhao
+                connectingContainer.querySelector('i').classList.remove('fa-spin', 'fa-circle-notch');
+                connectingContainer.querySelector('i').classList.add('fa-exclamation-triangle', 'text-red-400');
+                connectingContainer.querySelector('h1').textContent = "Connection Failed";
+                connectionError.innerHTML = "Chat server se connect nahi ho pa raha. <br> Page ko refresh karke try karein.";
+            }
+        }
 
-        // ===================================
-        // 3. LIGHTING (ROSHNI)
-        // ===================================
+        // --- LOGIN LOGIC ---
+        function handleLogin() {
+            const name = nameInput.value.trim();
+            const code = secretCodeInput.value.trim();
 
-        // AmbientLight poore scene ko halki roshni deti hai.
-        const ambientLight = new THREE.AmbientLight(0x333333);
-        scene.add(ambientLight);
+            if (!name || !code) {
+                errorMsg.textContent = "Naam aur code, dono daalo.";
+                return;
+            }
 
-        // PointLight ek bulb ki tarah kaam karta hai, jo ek point se roshni failata hai.
-        // Isse hum Suraj ke liye use karenge.
-        const pointLight = new THREE.PointLight(0xffffff, 2, 300);
-        scene.add(pointLight);
-
-        // ===================================
-        // 4. CELESTIAL BODIES (SURAJ AUR PLANETS)
-        // ===================================
-
-        // Helper function: Planet banane ke liye
-        function createPlanet(size, color, distance) {
-            const geometry = new THREE.SphereGeometry(size, 32, 32);
-            const material = new THREE.MeshStandardMaterial({ color: color });
-            const planet = new THREE.Mesh(geometry, material);
+            if (code !== SECRET_CODE) {
+                errorMsg.textContent = "Secret code galat hai!";
+                return;
+            }
             
-            // Planet ko ek Object3D me daal rahe hain taaki usse aasani se ghuma sakein.
-            const planetObj = new THREE.Object3D();
-            planetObj.add(planet);
-            scene.add(planetObj);
+            // Login successful
+            currentUserName = name;
+            loginContainer.classList.add('hidden');
+            chatContainer.classList.remove('hidden');
+            chatContainer.classList.add('flex');
+            welcomeMsg.textContent = `Aapka Swagat Hai, ${currentUserName}!`;
             
-            planet.position.x = distance; // Suraj se doori set kar rahe hain.
-            return { mesh: planet, obj: planetObj };
+            listenForMessages();
+        }
+
+        // --- MESSAGE HANDLING ---
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text === "" || !messagesCollection) return;
+
+            try {
+                await addDoc(messagesCollection, {
+                    sender: currentUserName,
+                    text: text,
+                    timestamp: serverTimestamp() // Server ka current time store karega
+                });
+                messageInput.value = "";
+            } catch (error) {
+                console.error("Error sending message: ", error);
+            }
         }
         
-        // Helper function: Orbit (chakkar ka raasta) banane ke liye
-        function createOrbit(distance) {
-            const geometry = new THREE.TorusGeometry(distance, 0.1, 16, 100);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-            const orbit = new THREE.Mesh(geometry, material);
-            orbit.rotation.x = Math.PI / 2; // Orbit ko flat karne ke liye rotate kar rahe hain.
-            scene.add(orbit);
-            return orbit;
+        // --- REAL-TIME LISTENER FOR MESSAGES ---
+        // Yeh function naye messages ke liye hamesha dekhta rahega
+        function listenForMessages() {
+            const q = query(messagesCollection, orderBy("timestamp"));
+
+            onSnapshot(q, (snapshot) => {
+                const isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 1;
+
+                chatMessages.innerHTML = ''; // Purane messages clear karo
+                snapshot.forEach((doc) => {
+                    displayMessage(doc.data());
+                });
+                
+                // Agar user pehle se neeche hai, toh scroll karo
+                if (isScrolledToBottom) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
         }
 
-        // --- Suraj (Sun) ---
-        const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-        // MeshBasicMaterial kyunki Suraj khud roshni dega, uspar roshni padne ki zaroorat nahi.
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
-        
-        // --- Planets ---
-        const mercury = createPlanet(0.8, 0xaaaaaa, 10);
-        const venus = createPlanet(1.2, 0xffa500, 15);
-        const earth = createPlanet(1.4, 0x0000ff, 22);
-        const mars = createPlanet(1, 0xff4500, 30);
-        const jupiter = createPlanet(3, 0xd2b48c, 45);
-        const saturn = createPlanet(2.5, 0xf0e68c, 60);
-        const uranus = createPlanet(2, 0xadd8e6, 75);
-        const neptune = createPlanet(1.8, 0x00008b, 90);
-
-        // --- Saturn ke Rings ---
-        const ringGeometry = new THREE.RingGeometry(3.5, 5, 64);
-        const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xaaa69a, side: THREE.DoubleSide });
-        const saturnRing = new THREE.Mesh(ringGeometry, ringMaterial);
-        saturn.mesh.add(saturnRing); // Ring ko Saturn ke mesh me add kar rahe hain.
-        saturnRing.rotation.x = -0.4 * Math.PI; // Ring ko thoda tilt kar rahe hain.
-
-        // --- Orbits ---
-        createOrbit(10); // Mercury
-        createOrbit(15); // Venus
-        createOrbit(22); // Earth
-        createOrbit(30); // Mars
-        createOrbit(45); // Jupiter
-        createOrbit(60); // Saturn
-        createOrbit(75); // Uranus
-        createOrbit(90); // Neptune
-
-
-        // ===================================
-        // 5. ANIMATION LOOP
-        // ===================================
-
-        // Yeh function har frame me chalta hai aur objects ko update karta hai.
-        function animate() {
-            // requestAnimationFrame se loop smooth chalta hai.
-            requestAnimationFrame(animate);
-
-            // Har object ko thoda sa ghuma rahe hain.
-            // Suraj apni jagah par ghumega.
-            sun.rotation.y += 0.001;
-
-            // Planets Suraj ke chaaron taraf ghumenge.
-            mercury.obj.rotation.y += 0.04;
-            venus.obj.rotation.y += 0.015;
-            earth.obj.rotation.y += 0.01;
-            mars.obj.rotation.y += 0.008;
-            jupiter.obj.rotation.y += 0.002;
-            saturn.obj.rotation.y += 0.0009;
-            uranus.obj.rotation.y += 0.0004;
-            neptune.obj.rotation.y += 0.0001;
+        // --- DISPLAY MESSAGE IN UI ---
+        function displayMessage({ sender, text, timestamp }) {
+            const isMe = sender === currentUserName;
             
-            // Saare planets apni jagah par bhi ghumenge.
-            mercury.mesh.rotation.y += 0.01;
-            venus.mesh.rotation.y += 0.008;
-            earth.mesh.rotation.y += 0.02;
-            mars.mesh.rotation.y += 0.018;
-            jupiter.mesh.rotation.y += 0.04;
-            saturn.mesh.rotation.y += 0.038;
-            uranus.mesh.rotation.y += 0.03;
-            neptune.mesh.rotation.y += 0.032;
+            // Timestamp ko format karo (e.g., 4:22 PM)
+            let timeString = '';
+            if (timestamp && timestamp.toDate) {
+                timeString = timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
 
-            // Controls ko update karna zaroori hai.
-            controls.update();
-
-            // Scene ko naye positions ke saath render karo.
-            renderer.render(scene, camera);
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('flex', 'items-end', 'gap-2', 'fade-in');
+             if (isMe) {
+                messageDiv.classList.add('justify-end');
+            } else {
+                messageDiv.classList.add('justify-start');
+            }
+            
+            const messageBubble = `
+                <div class="max-w-xs md:max-w-md">
+                    <div class="px-4 py-2 rounded-2xl ${isMe ? 'bg-pink-600 rounded-br-none' : 'bg-gray-700 rounded-bl-none'}">
+                        <p class="text-sm font-bold text-white ${isMe ? 'hidden' : ''}">${sender}</p>
+                        <p class="text-white break-words">${text}</p>
+                        <p class="text-xs text-gray-300 mt-1 ${isMe ? 'text-right' : 'text-left'}">${timeString}</p>
+                    </div>
+                </div>
+            `;
+            
+            messageDiv.innerHTML = messageBubble;
+            chatMessages.appendChild(messageDiv);
         }
 
-        // ===================================
-        // 6. RESPONSIVENESS
-        // ===================================
+        // --- EVENT LISTENERS ---
+        loginBtn.addEventListener('click', handleLogin);
+        secretCodeInput.addEventListener('keyup', (e) => e.key === 'Enter' && handleLogin());
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keyup', (e) => e.key === 'Enter' && sendMessage());
 
-        // Jab bhi window ka size change ho, to camera aur renderer ko update karo.
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        // --- Start the application ---
+        initializeFirebase();
 
-        // Animation shuru karo!
-        animate();
     </script>
 </body>
 </html>
