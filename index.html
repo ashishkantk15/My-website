@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
@@ -107,9 +107,14 @@
         // --- FIREBASE INITIALIZATION ---
         async function initializeFirebase() {
             try {
+                // Check if Firebase config is available
+                if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                    throw new Error("Firebase configuration is missing. App cannot start.");
+                }
+
                 // Yeh global variables Canvas environment se aayenge
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const firebaseConfig = JSON.parse(__firebase_config);
 
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -130,7 +135,12 @@
 
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                errorMsg.textContent = "Initialization error. Please refresh.";
+                errorMsg.textContent = "App load nahi ho pa raha hai. Refresh karein.";
+                // Agar Firebase load na ho to login form disable kar do
+                nameInput.disabled = true;
+                secretCodeInput.disabled = true;
+                loginBtn.disabled = true;
+                loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
@@ -233,3 +243,4 @@
     </script>
 </body>
 </html>
+
