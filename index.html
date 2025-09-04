@@ -1,71 +1,85 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Chat ❤️</title>
+    <title>Personal Chat ❤️</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* Custom Styles */
         body {
-            background: #111827; /* Dark background */
+            color: #E5E7EB; /* Light gray text */
+        }
+        /* Animated Gradient Background */
+        .animated-gradient {
+            background: linear-gradient(-45deg, #111827, #1f2937, #374151, #4b5563);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         /* Scrollbar styling */
-        #chat-messages::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-messages::-webkit-scrollbar-track {
-            background: #1f2937;
-        }
+        #chat-messages::-webkit-scrollbar { width: 8px; }
+        #chat-messages::-webkit-scrollbar-track { background: transparent; }
         #chat-messages::-webkit-scrollbar-thumb {
             background-color: #4b5563;
             border-radius: 20px;
-            border: 3px solid #1f2937;
+            border: 2px solid #1f2937;
         }
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
-<body class="text-white">
+<body class="animated-gradient">
+
+    <!-- Connecting State -->
+    <div id="connecting-container" class="flex flex-col items-center justify-center h-screen">
+        <div class="text-center">
+            <i class="fas fa-circle-notch fa-spin text-4xl text-pink-500"></i>
+            <h1 class="text-2xl mt-4">Connecting to Chat Server...</h1>
+            <p id="connection-error" class="text-red-400 mt-2"></p>
+        </div>
+    </div>
 
     <!-- Login Section -->
-    <div id="login-container" class="flex items-center justify-center h-screen">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-700">
+    <div id="login-container" class="hidden items-center justify-center h-screen">
+        <div class="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-700">
             <h1 class="text-3xl font-bold text-center mb-2">Private Chat Room</h1>
             <p class="text-center text-gray-400 mb-6">❤️</p>
             <div class="space-y-4">
-                <input type="text" id="name" placeholder="Apna Naam Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <input type="password" id="secret-code" placeholder="Secret Code Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                <input type="text" id="name" placeholder="Apna Naam Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
+                <input type="password" id="secret-code" placeholder="Secret Code Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
             </div>
             <button id="login-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg mt-6 transition duration-300">Enter Karo</button>
-            <p id="error-msg" class="text-red-500 text-center mt-4 h-4"></p>
+            <p id="error-msg" class="text-red-400 text-center mt-4 h-4"></p>
         </div>
     </div>
 
     <!-- Chat Section (Initially Hidden) -->
     <div id="chat-container" class="hidden h-screen flex flex-col">
-        <header class="bg-gray-800 p-4 shadow-md flex justify-between items-center border-b border-gray-700">
-            <h1 class="text-2xl font-bold text-pink-500">Chatting...</h1>
+        <header class="bg-gray-800/50 backdrop-blur-sm p-4 shadow-md flex justify-between items-center border-b border-gray-700">
+            <h1 class="text-2xl font-bold text-pink-500">Private Chat</h1>
             <p id="welcome-msg" class="text-gray-300"></p>
         </header>
 
-        <main id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-900">
+        <main id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
             <!-- Messages will be dynamically inserted here -->
         </main>
 
-        <footer class="bg-gray-800 p-4">
+        <footer class="bg-gray-800/50 backdrop-blur-sm p-4 border-t border-gray-700">
             <div class="flex items-center space-x-2">
-                <input type="text" id="message-input" placeholder="Message likho..." class="flex-1 bg-gray-700 text-white p-3 rounded-full border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <button id="send-btn" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-300">
+                <input type="text" id="message-input" placeholder="Message likho..." class="flex-1 bg-gray-700 text-white p-3 rounded-full border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
+                <button id="send-btn" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-300 flex-shrink-0">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -77,17 +91,17 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // ===================================
         // SCRIPT LOGIC
         // ===================================
         
         // --- CONFIGURATION ---
-        // YEH SECRET CODE SIRF AAPKO AUR AAPKI GF KO PATA HONA CHAHIYE
-        const SECRET_CODE = "mylove123"; 
+        const SECRET_CODE = "mylove123"; // YEH SECRET CODE SIRF AAPKO AUR AAPKI GF KO PATA HONA CHAHIYE
         
         // --- DOM ELEMENTS ---
+        const connectingContainer = document.getElementById('connecting-container');
+        const connectionError = document.getElementById('connection-error');
         const loginContainer = document.getElementById('login-container');
         const chatContainer = document.getElementById('chat-container');
         const loginBtn = document.getElementById('login-btn');
@@ -99,48 +113,48 @@
         const messageInput = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
         
-        let db;
-        let auth;
         let messagesCollection;
         let currentUserName = '';
 
         // --- FIREBASE INITIALIZATION ---
+        // Yeh function app ko Firebase se connect karne ki koshish karega
         async function initializeFirebase() {
             try {
-                // Check if Firebase config is available
+                // Check if Firebase config is available from the platform
                 if (typeof __firebase_config === 'undefined' || !__firebase_config) {
-                    throw new Error("Firebase configuration is missing. App cannot start.");
+                    throw new Error("Website configuration missing.");
                 }
 
-                // Yeh global variables Canvas environment se aayenge
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-chat-app';
                 const firebaseConfig = JSON.parse(__firebase_config);
 
                 const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                setLogLevel('debug'); // Debugging ke liye console me logs dikhayega
+                const db = getFirestore(app);
+                const auth = getAuth(app);
 
-                // User ko sign in karna zaroori hai Firestore use karne ke liye
+                // Sign in the user (required to access Firestore)
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
                 
-                // Chat collection ka reference set kar rahe hain secret code ke basis par
+                // Set up the reference to our private chat collection
                 const collectionName = `private-chat-${SECRET_CODE}`;
                 messagesCollection = collection(db, `/artifacts/${appId}/public/data/${collectionName}`);
-                console.log("Firebase initialized and user signed in.");
+                
+                // Connection successful, show login screen
+                connectingContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+                loginContainer.classList.add('flex');
 
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                errorMsg.textContent = "App load nahi ho pa raha hai. Refresh karein.";
-                // Agar Firebase load na ho to login form disable kar do
-                nameInput.disabled = true;
-                secretCodeInput.disabled = true;
-                loginBtn.disabled = true;
-                loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                // Agar connection fail hota hai, toh saaf error dikhao
+                connectingContainer.querySelector('i').classList.remove('fa-spin', 'fa-circle-notch');
+                connectingContainer.querySelector('i').classList.add('fa-exclamation-triangle', 'text-red-400');
+                connectingContainer.querySelector('h1').textContent = "Connection Failed";
+                connectionError.innerHTML = "Chat server se connect nahi ho pa raha. <br> Page ko refresh karke try karein.";
             }
         }
 
@@ -149,7 +163,7 @@
             const name = nameInput.value.trim();
             const code = secretCodeInput.value.trim();
 
-            if (name === "" || code === "") {
+            if (!name || !code) {
                 errorMsg.textContent = "Naam aur code, dono daalo.";
                 return;
             }
@@ -164,7 +178,7 @@
             loginContainer.classList.add('hidden');
             chatContainer.classList.remove('hidden');
             chatContainer.classList.add('flex');
-            welcomeMsg.textContent = `Welcome, ${currentUserName}!`;
+            welcomeMsg.textContent = `Aapka Swagat Hai, ${currentUserName}!`;
             
             listenForMessages();
         }
@@ -178,49 +192,61 @@
                 await addDoc(messagesCollection, {
                     sender: currentUserName,
                     text: text,
-                    timestamp: serverTimestamp()
+                    timestamp: serverTimestamp() // Server ka current time store karega
                 });
-                messageInput.value = ""; // Input field clear kar do
+                messageInput.value = "";
             } catch (error) {
                 console.error("Error sending message: ", error);
             }
         }
         
-        // --- REAL-TIME LISTENER ---
+        // --- REAL-TIME LISTENER FOR MESSAGES ---
+        // Yeh function naye messages ke liye hamesha dekhta rahega
         function listenForMessages() {
             const q = query(messagesCollection, orderBy("timestamp"));
 
             onSnapshot(q, (snapshot) => {
-                chatMessages.innerHTML = ''; // Pehle ke messages clear kar do
+                const isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 1;
+
+                chatMessages.innerHTML = ''; // Purane messages clear karo
                 snapshot.forEach((doc) => {
-                    const message = doc.data();
-                    displayMessage(message);
+                    displayMessage(doc.data());
                 });
-                // Scroll to the bottom to see the latest message
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Agar user pehle se neeche hai, toh scroll karo
+                if (isScrolledToBottom) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
             });
         }
 
         // --- DISPLAY MESSAGE IN UI ---
-        function displayMessage({ sender, text }) {
+        function displayMessage({ sender, text, timestamp }) {
             const isMe = sender === currentUserName;
+            
+            // Timestamp ko format karo (e.g., 4:22 PM)
+            let timeString = '';
+            if (timestamp && timestamp.toDate) {
+                timeString = timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+
             const messageDiv = document.createElement('div');
-            messageDiv.classList.add('flex', 'items-end', 'fade-in');
-            
-            const messageBubble = `
-                <div class="max-w-xs md:max-w-md lg:max-w-lg">
-                    <p class="text-xs ${isMe ? 'text-right' : 'text-left'} text-gray-400 mb-1">${sender}</p>
-                    <div class="px-4 py-2 rounded-2xl ${isMe ? 'bg-pink-600 rounded-br-none' : 'bg-gray-700 rounded-bl-none'}">
-                        <p class="text-white">${text}</p>
-                    </div>
-                </div>
-            `;
-            
-            if (isMe) {
+            messageDiv.classList.add('flex', 'items-end', 'gap-2', 'fade-in');
+             if (isMe) {
                 messageDiv.classList.add('justify-end');
             } else {
                 messageDiv.classList.add('justify-start');
             }
+            
+            const messageBubble = `
+                <div class="max-w-xs md:max-w-md">
+                    <div class="px-4 py-2 rounded-2xl ${isMe ? 'bg-pink-600 rounded-br-none' : 'bg-gray-700 rounded-bl-none'}">
+                        <p class="text-sm font-bold text-white ${isMe ? 'hidden' : ''}">${sender}</p>
+                        <p class="text-white break-words">${text}</p>
+                        <p class="text-xs text-gray-300 mt-1 ${isMe ? 'text-right' : 'text-left'}">${timeString}</p>
+                    </div>
+                </div>
+            `;
             
             messageDiv.innerHTML = messageBubble;
             chatMessages.appendChild(messageDiv);
@@ -228,19 +254,13 @@
 
         // --- EVENT LISTENERS ---
         loginBtn.addEventListener('click', handleLogin);
-        secretCodeInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') handleLogin();
-        });
-        
+        secretCodeInput.addEventListener('keyup', (e) => e.key === 'Enter' && handleLogin());
         sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+        messageInput.addEventListener('keyup', (e) => e.key === 'Enter' && sendMessage());
 
-        // Start the application
+        // --- Start the application ---
         initializeFirebase();
 
     </script>
 </body>
 </html>
-
