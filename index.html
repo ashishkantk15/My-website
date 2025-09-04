@@ -1,143 +1,209 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepsi Masti</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for a nice look -->
-    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;700&display=swap" rel="stylesheet">
+    <title>3D Solar System Simulation</title>
     <style>
-        /* Custom styles for the page */
+        /* Basic styling */
         body {
-            font-family: 'Mukta', sans-serif;
-            /* A cool gradient background */
-            background: #0f0c29;
-            background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
-            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            margin: 0;
+            overflow: hidden; /* Canvas ko full screen rakhega */
+            background-color: #000000;
+            color: white;
+            font-family: Arial, sans-serif;
         }
-        
-        /* Glass effect for the card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        canvas {
+            display: block; /* Extra space remove karne ke liye */
         }
-
-        /* Styling for the button */
-        .pepsi-btn {
-            background: linear-gradient(90deg, #0062be, #e61d2b);
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            display: block;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
         }
-
-        /* Hover effect for the button */
-        .pepsi-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px #e61d2b, 0 0 15px #0062be;
+        #info h1 {
+            margin: 0;
+            font-size: 2em;
         }
-        
-        /* Floating animation for the soda can */
-        .soda-can {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        /* Shake animation for the card on button click */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        .animate-shake {
-            animation: shake 0.5s ease-in-out;
+        #info p {
+            margin: 5px;
+            font-size: 1.2em;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div id="mainCard" class="glass-card text-center p-8 w-full max-w-md">
-        <!-- A cool SVG icon of a soda can that floats -->
-        <div class="soda-can mb-6">
-            <svg class="w-24 h-24 mx-auto" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="canGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#f9fafb;stop-opacity:1" />
-                        <stop offset="10%" style="stop-color:#e5e7eb;stop-opacity:1" />
-                        <stop offset="90%" style="stop-color:#f3f4f6;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#f9fafb;stop-opacity:1" />
-                    </linearGradient>
-                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="49%" style="stop-color:#e61d2b;stop-opacity:1" />
-                        <stop offset="51%" style="stop-color:#0062be;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <rect x="25" y="10" width="50" height="80" rx="10" fill="url(#canGradient)"/>
-                <ellipse cx="50" cy="10" rx="25" ry="5" fill="#e5e7eb"/>
-                <ellipse cx="50" cy="90" rx="25" ry="5" fill="#d1d5db"/>
-                <circle cx="50" cy="50" r="20" fill="url(#logoGradient)"/>
-                <path d="M 38 50 C 38 40, 62 40, 62 50 C 62 60, 38 60, 38 50 Z" fill="white"/>
-            </svg>
-        </div>
-
-        <h1 class="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
-            Do Rupay Ki Pepsi
-        </h1>
-        <p class="text-lg text-gray-300 mt-2 mb-8 drop-shadow-md">
-            Arnab aur Subham Bhai Sexy
-        </p>
-
-        <!-- The main button -->
-        <button id="pepsiButton" class="pepsi-btn text-white font-bold py-3 px-8 rounded-full text-lg w-full">
-            Yahan Click Karo!
-        </button>
-
-        <!-- A hidden message div that appears on click -->
-        <div id="message" class="h-8 mt-6 text-xl font-semibold text-transparent transition-all duration-500">
-            <!-- Message will appear here via JavaScript -->
-        </div>
+    <div id="info">
+        <h1>Apna Solar System</h1>
+        <p>Mouse se drag karke ghumaayein, scroll karke zoom karein.</p>
     </div>
 
+    <!-- Three.js library ko import kar rahe hain -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls se user camera control kar paayega -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
     <script>
-        // JavaScript for interactivity
-        const pepsiButton = document.getElementById('pepsiButton');
-        const messageDiv = document.getElementById('message');
-        const mainCard = document.getElementById('mainCard');
-        
-        // Some fun messages to show on click
-        const messages = [
-            "Poora system hila denge!",
-            "Code check kar, sexy hai na?",
-            "Thanda matlab... Pepsi!",
-            "Cheers, Arnab & Subham Bhai!",
-            "Coding ka nasha!"
-        ];
-        let currentMessageIndex = 0;
+        // ===================================
+        // 1. SCENE, CAMERA, AUR RENDERER SETUP
+        // ===================================
 
-        // Event listener for the button click
-        pepsiButton.addEventListener('click', () => {
-            // Show a message
-            messageDiv.classList.remove('text-transparent');
-            messageDiv.classList.add('text-white');
-            messageDiv.innerText = messages[currentMessageIndex];
+        // Scene ek container hai jisme sab kuch (planets, lights, etc.) rakha jaata hai.
+        const scene = new THREE.Scene();
+
+        // PerspectiveCamera insani aankh ki tarah cheezon ko dekhta hai.
+        // Parameters: (Field of View, Aspect Ratio, Near Clipping Plane, Far Clipping Plane)
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 50; // Camera ko thoda peeche set kar rahe hain.
+
+        // WebGLRenderer scene ko browser me draw karta hai.
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement); // Renderer ko HTML body me add kar rahe hain.
+
+        // ===================================
+        // 2. CONTROLS
+        // ===================================
+
+        // OrbitControls user ko mouse se camera control karne ki azaadi deta hai.
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Smooth camera movement ke liye.
+
+        // ===================================
+        // 3. LIGHTING (ROSHNI)
+        // ===================================
+
+        // AmbientLight poore scene ko halki roshni deti hai.
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+
+        // PointLight ek bulb ki tarah kaam karta hai, jo ek point se roshni failata hai.
+        // Isse hum Suraj ke liye use karenge.
+        const pointLight = new THREE.PointLight(0xffffff, 2, 300);
+        scene.add(pointLight);
+
+        // ===================================
+        // 4. CELESTIAL BODIES (SURAJ AUR PLANETS)
+        // ===================================
+
+        // Helper function: Planet banane ke liye
+        function createPlanet(size, color, distance) {
+            const geometry = new THREE.SphereGeometry(size, 32, 32);
+            const material = new THREE.MeshStandardMaterial({ color: color });
+            const planet = new THREE.Mesh(geometry, material);
             
-            // Move to the next message for the next click
-            currentMessageIndex = (currentMessageIndex + 1) % messages.length;
+            // Planet ko ek Object3D me daal rahe hain taaki usse aasani se ghuma sakein.
+            const planetObj = new THREE.Object3D();
+            planetObj.add(planet);
+            scene.add(planetObj);
+            
+            planet.position.x = distance; // Suraj se doori set kar rahe hain.
+            return { mesh: planet, obj: planetObj };
+        }
+        
+        // Helper function: Orbit (chakkar ka raasta) banane ke liye
+        function createOrbit(distance) {
+            const geometry = new THREE.TorusGeometry(distance, 0.1, 16, 100);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+            const orbit = new THREE.Mesh(geometry, material);
+            orbit.rotation.x = Math.PI / 2; // Orbit ko flat karne ke liye rotate kar rahe hain.
+            scene.add(orbit);
+            return orbit;
+        }
 
-            // Add a fun shake effect to the card
-            mainCard.classList.add('animate-shake');
-            setTimeout(() => {
-                mainCard.classList.remove('animate-shake');
-            }, 500);
+        // --- Suraj (Sun) ---
+        const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+        // MeshBasicMaterial kyunki Suraj khud roshni dega, uspar roshni padne ki zaroorat nahi.
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+        
+        // --- Planets ---
+        const mercury = createPlanet(0.8, 0xaaaaaa, 10);
+        const venus = createPlanet(1.2, 0xffa500, 15);
+        const earth = createPlanet(1.4, 0x0000ff, 22);
+        const mars = createPlanet(1, 0xff4500, 30);
+        const jupiter = createPlanet(3, 0xd2b48c, 45);
+        const saturn = createPlanet(2.5, 0xf0e68c, 60);
+        const uranus = createPlanet(2, 0xadd8e6, 75);
+        const neptune = createPlanet(1.8, 0x00008b, 90);
+
+        // --- Saturn ke Rings ---
+        const ringGeometry = new THREE.RingGeometry(3.5, 5, 64);
+        const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xaaa69a, side: THREE.DoubleSide });
+        const saturnRing = new THREE.Mesh(ringGeometry, ringMaterial);
+        saturn.mesh.add(saturnRing); // Ring ko Saturn ke mesh me add kar rahe hain.
+        saturnRing.rotation.x = -0.4 * Math.PI; // Ring ko thoda tilt kar rahe hain.
+
+        // --- Orbits ---
+        createOrbit(10); // Mercury
+        createOrbit(15); // Venus
+        createOrbit(22); // Earth
+        createOrbit(30); // Mars
+        createOrbit(45); // Jupiter
+        createOrbit(60); // Saturn
+        createOrbit(75); // Uranus
+        createOrbit(90); // Neptune
+
+
+        // ===================================
+        // 5. ANIMATION LOOP
+        // ===================================
+
+        // Yeh function har frame me chalta hai aur objects ko update karta hai.
+        function animate() {
+            // requestAnimationFrame se loop smooth chalta hai.
+            requestAnimationFrame(animate);
+
+            // Har object ko thoda sa ghuma rahe hain.
+            // Suraj apni jagah par ghumega.
+            sun.rotation.y += 0.001;
+
+            // Planets Suraj ke chaaron taraf ghumenge.
+            mercury.obj.rotation.y += 0.04;
+            venus.obj.rotation.y += 0.015;
+            earth.obj.rotation.y += 0.01;
+            mars.obj.rotation.y += 0.008;
+            jupiter.obj.rotation.y += 0.002;
+            saturn.obj.rotation.y += 0.0009;
+            uranus.obj.rotation.y += 0.0004;
+            neptune.obj.rotation.y += 0.0001;
+            
+            // Saare planets apni jagah par bhi ghumenge.
+            mercury.mesh.rotation.y += 0.01;
+            venus.mesh.rotation.y += 0.008;
+            earth.mesh.rotation.y += 0.02;
+            mars.mesh.rotation.y += 0.018;
+            jupiter.mesh.rotation.y += 0.04;
+            saturn.mesh.rotation.y += 0.038;
+            uranus.mesh.rotation.y += 0.03;
+            neptune.mesh.rotation.y += 0.032;
+
+            // Controls ko update karna zaroori hai.
+            controls.update();
+
+            // Scene ko naye positions ke saath render karo.
+            renderer.render(scene, camera);
+        }
+
+        // ===================================
+        // 6. RESPONSIVENESS
+        // ===================================
+
+        // Jab bhi window ka size change ho, to camera aur renderer ko update karo.
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
-    </script>
 
+        // Animation shuru karo!
+        animate();
+    </script>
 </body>
 </html>
