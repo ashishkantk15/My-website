@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Tic-Tac-Toe</title>
+    <title>Real-time Tic-Tac-Toe (No Auth)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -77,7 +77,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Authentication import hata diya gaya hai
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- DOM ELEMENTS ---
@@ -93,42 +93,24 @@
         const newGameBtn = document.getElementById('new-game-btn');
         
         // --- FIREBASE SETUP ---
-        let db, auth;
-        let currentUser = null;
-        let gameUnsubscribe = null; // To stop listening to game updates
+        let db;
+        // currentUser ki jagah localPlayerId use hoga
+        const localPlayerId = crypto.randomUUID(); 
+        let gameUnsubscribe = null;
 
-        // Use pre-configured firebase config and auth token if available
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIza...", authDomain: "...", projectId: "..." };
 
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
-        auth = getAuth(app);
 
-        // --- AUTHENTICATION ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-            } else {
-                try {
-                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch(e) {
-                    console.error("Authentication Error: ", e);
-                    statusText.textContent = "Authentication failed. Please refresh.";
-                }
-            }
-        });
-
+        // --- AUTHENTICATION BLOCK REMOVED ---
+        // onAuthStateChanged block ko poora hata diya gaya hai.
 
         // --- GAME LOGIC ---
         let playerSymbol = '';
         let currentGameId = '';
 
-        // Function to create game board cells
         function createBoard() {
             gameBoard.innerHTML = '';
             for (let i = 0; i < 9; i++) {
@@ -141,8 +123,6 @@
         }
 
         async function createNewGame() {
-            if (!currentUser) { alert("Pehle authenticate ho raha hai..."); return; }
-            
             const gameId = Math.random().toString(36).substr(2, 6).toUpperCase();
             currentGameId = gameId;
             playerSymbol = 'X';
@@ -152,10 +132,10 @@
             try {
                 await setDoc(gameRef, {
                     board: Array(9).fill(''),
-                    players: [currentUser.uid],
+                    players: [localPlayerId], // currentUser.uid ki jagah localPlayerId
                     currentPlayerIndex: 0,
-                    status: 'waiting', // 'waiting', 'playing', 'finished'
-                    winner: null, // 'X', 'O', 'draw'
+                    status: 'waiting',
+                    winner: null,
                     createdAt: new Date()
                 });
                 
@@ -168,8 +148,6 @@
         }
 
         async function joinGame() {
-            if (!currentUser) { alert("Pehle authenticate ho raha hai..."); return; }
-
             const gameId = gameIdInput.value.trim().toUpperCase();
             if (!gameId) { alert("Please Game ID daalein."); return; }
 
@@ -183,21 +161,21 @@
 
             const gameData = gameSnap.data();
 
-            if (gameData.players.length >= 2 && !gameData.players.includes(currentUser.uid)) {
+            if (gameData.players.length >= 2 && !gameData.players.includes(localPlayerId)) { // currentUser.uid ki jagah localPlayerId
                 alert("Game pehle se full hai!");
                 return;
             }
 
             currentGameId = gameId;
             
-            if(!gameData.players.includes(currentUser.uid)) {
+            if(!gameData.players.includes(localPlayerId)) { // currentUser.uid ki jagah localPlayerId
                  await updateDoc(gameRef, {
-                    players: [...gameData.players, currentUser.uid],
+                    players: [...gameData.players, localPlayerId], // currentUser.uid ki jagah localPlayerId
                     status: 'playing'
                 });
                  playerSymbol = 'O';
             } else {
-                 playerSymbol = gameData.players[0] === currentUser.uid ? 'X' : 'O';
+                 playerSymbol = gameData.players[0] === localPlayerId ? 'X' : 'O'; // currentUser.uid ki jagah localPlayerId
             }
 
             showGameScreen(gameId);
@@ -205,7 +183,7 @@
         }
 
         function listenToGameUpdates(gameId) {
-            if (gameUnsubscribe) gameUnsubscribe(); // Stop listening to old game
+            if (gameUnsubscribe) gameUnsubscribe();
             
             const gameRef = doc(db, `/artifacts/${appId}/public/data/tic-tac-toe-games`, gameId);
             gameUnsubscribe = onSnapshot(gameRef, (doc) => {
@@ -217,7 +195,6 @@
         }
 
         function updateUI(gameData) {
-            // Update board
             const cells = gameBoard.querySelectorAll('.cell');
             gameData.board.forEach((symbol, index) => {
                 cells[index].textContent = symbol;
@@ -225,9 +202,8 @@
                 if(symbol === 'O') cells[index].classList.add('text-blue-400');
             });
 
-            const myTurn = gameData.players[gameData.currentPlayerIndex] === currentUser.uid;
+            const myTurn = gameData.players[gameData.currentPlayerIndex] === localPlayerId; // currentUser.uid ki jagah localPlayerId
 
-            // Update status text and board state
             if (gameData.status === 'waiting') {
                 statusText.textContent = "Dost ka intezar hai...";
                 gameBoard.classList.add('disabled');
@@ -245,7 +221,7 @@
                 if (gameData.winner === 'draw') {
                     statusText.textContent = "Game Draw!";
                 } else {
-                    const amIWinner = gameData.players.indexOf(currentUser.uid) === (gameData.winner === 'X' ? 0 : 1);
+                    const amIWinner = gameData.players.indexOf(localPlayerId) === (gameData.winner === 'X' ? 0 : 1); // currentUser.uid ki jagah localPlayerId
                     statusText.textContent = amIWinner ? "Aap Jeet Gaye! 🎉" : "Aap Haar Gaye 😞";
                 }
             }
@@ -257,16 +233,13 @@
             const gameSnap = await getDoc(gameRef);
             const gameData = gameSnap.data();
 
-            // Check if move is valid
-            if (gameData.board[cellIndex] !== '' || gameData.status !== 'playing' || gameData.players[gameData.currentPlayerIndex] !== currentUser.uid) {
+            if (gameData.board[cellIndex] !== '' || gameData.status !== 'playing' || gameData.players[gameData.currentPlayerIndex] !== localPlayerId) { // currentUser.uid ki jagah localPlayerId
                 return;
             }
 
-            // Update board
             const newBoard = [...gameData.board];
             newBoard[cellIndex] = playerSymbol;
             
-            // Check for winner
             const winnerInfo = checkWinner(newBoard);
             
             const updatePayload = {
@@ -284,9 +257,9 @@
         
         function checkWinner(board) {
             const winningCombos = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-                [0, 4, 8], [2, 4, 6]  // diagonals
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
             ];
 
             for (const combo of winningCombos) {
@@ -303,7 +276,6 @@
             return { winner: null };
         }
 
-        // --- UI FLOW ---
         function showGameScreen(gameId) {
             createBoard();
             gameIdDisplay.textContent = gameId;
@@ -319,12 +291,10 @@
             newGameBtn.classList.add('hidden');
         }
 
-        // --- EVENT LISTENERS ---
         createGameBtn.addEventListener('click', createNewGame);
         joinGameBtn.addEventListener('click', joinGame);
         newGameBtn.addEventListener('click', resetToMenu);
         copyIdBtn.addEventListener('click', () => {
-            // Using document.execCommand for wider compatibility in iframes
             const tempInput = document.createElement('textarea');
             tempInput.value = currentGameId;
             document.body.appendChild(tempInput);
@@ -343,3 +313,4 @@
     </script>
 </body>
 </html>
+
