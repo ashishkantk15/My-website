@@ -1,163 +1,345 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Chat ❤️</title>
+    <title>Real-time Tic-Tac-Toe</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        .animated-gradient { background: linear-gradient(-45deg, #111827, #1f2937, #374151, #4b5563); background-size: 400% 400%; animation: gradientBG 15s ease infinite; }
-        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        #chat-messages::-webkit-scrollbar { width: 8px; }
-        #chat-messages::-webkit-scrollbar-track { background: transparent; }
-        #chat-messages::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 20px; border: 2px solid #1f2937; }
-        /* Yahaan comma ki galti theek kar di hai */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            touch-action: manipulation; /* Mobile par double tap zoom ko rokne ke liye */
+        }
+        .cell {
+            transition: all 0.2s ease;
+        }
+        .cell:hover {
+            background-color: #374151; /* Darker hover for cells */
+        }
+        .btn {
+            transition: all 0.2s ease;
+        }
+        #game-board.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
     </style>
 </head>
-<body class="animated-gradient">
-    <div id="login-container" class="flex items-center justify-center h-screen">
-        <div class="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-700">
-            <h1 class="text-3xl font-bold text-center mb-2">Private Chat Room</h1>
-            <p class="text-center text-gray-400 mb-6">❤️</p>
-            <div class="space-y-4">
-                <input type="text" id="name" placeholder="Apna Naam Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
-                <input type="password" id="secret-code" placeholder="Secret Code Daalo..." class="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
-            </div>
-            <button id="login-btn" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg mt-6 transition duration-300">Enter Karo</button>
-            <p id="error-msg" class="text-red-400 text-center mt-4 h-5"></p>
-        </div>
-    </div>
-    <div id="chat-container" class="hidden h-screen flex flex-col">
-        <header class="bg-gray-800/50 backdrop-blur-sm p-4 shadow-md flex justify-between items-center border-b border-gray-700">
-            <h1 class="text-2xl font-bold text-pink-500">Private Chat</h1>
-            <p id="welcome-msg" class="text-gray-300"></p>
-        </header>
-        <main id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4"></main>
-        <footer class="bg-gray-800/50 backdrop-blur-sm p-4 border-t border-gray-700">
-            <div class="flex items-center space-x-2">
-                <input type="text" id="message-input" placeholder="Message likho..." class="flex-1 bg-gray-700 text-white p-3 rounded-full border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition">
-                <button id="send-btn" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-12 h-12 flex items-center justify-center transition duration-300 flex-shrink-0">
-                    <i class="fas fa-paper-plane"></i>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="w-full max-w-md mx-auto">
+
+        <!-- Initial Screen: Create or Join Game -->
+        <div id="menu-screen" class="text-center space-y-6">
+            <h1 class="text-5xl font-bold text-cyan-400">Tic-Tac-Toe</h1>
+            <p class="text-gray-400">Doston ke saath online khelein!</p>
+            <div>
+                <button id="create-game-btn" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg text-lg btn">
+                    Naya Game Banayein
                 </button>
             </div>
-        </footer>
+            <div class="flex items-center space-x-2">
+                <hr class="flex-grow border-gray-600">
+                <span class="text-gray-500">YA</span>
+                <hr class="flex-grow border-gray-600">
+            </div>
+            <div class="space-y-3">
+                <input type="text" id="game-id-input" placeholder="Dost ka Game ID daalein" class="w-full p-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-center focus:outline-none focus:border-cyan-500">
+                <button id="join-game-btn" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg text-lg btn">
+                    Game Join Karein
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden text-center">
+            <div class="mb-4">
+                <p class="text-gray-400">Game ID (dost ko bhejein):</p>
+                <div class="flex justify-center items-center gap-2 mt-2">
+                    <span id="game-id-display" class="text-2xl font-mono bg-gray-800 p-2 rounded-lg"></span>
+                    <button id="copy-id-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg btn">Copy</button>
+                </div>
+            </div>
+            
+            <p id="status-text" class="text-xl h-14 my-4 flex items-center justify-center text-cyan-400"></p>
+
+            <div id="game-board" class="grid grid-cols-3 gap-3 w-full aspect-square max-w-sm mx-auto bg-gray-800 p-3 rounded-lg shadow-lg">
+                <!-- Cells will be generated by JS -->
+            </div>
+
+             <button id="new-game-btn" class="hidden w-full mt-6 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg text-lg btn">
+                Naya Game Khele?
+            </button>
+
+        </div>
     </div>
 
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyDa9qg1seFqhqJcA7Yuqx4Y5kZH_y3sUXA",
-            authDomain: "my-private-chat-6d2f4.firebaseapp.com",
-            projectId: "my-private-chat-6d2f4",
-            storageBucket: "my-private-chat-6d2f4.appspot.com",
-            messagingSenderId: "115446856537",
-            appId: "1:115446856537:web:6ed8400be724bb76e5aa48",
-            measurementId: "G-7LFCPX38P7"
-        };
-        
-        const SECRET_CODE = "mylove123";
-        
-        const loginContainer = document.getElementById('login-container');
-        const chatContainer = document.getElementById('chat-container');
-        const loginBtn = document.getElementById('login-btn');
-        const nameInput = document.getElementById('name');
-        const secretCodeInput = document.getElementById('secret-code');
-        const errorMsg = document.getElementById('error-msg');
-        const welcomeMsg = document.getElementById('welcome-msg');
-        const chatMessages = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
-        
-        let messagesCollection;
-        let currentUserName = '';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth(app);
-            await signInAnonymously(auth);
-            const collectionName = `private-chat-${SECRET_CODE}`;
-            messagesCollection = collection(db, collectionName);
-        } catch (error) {
-            console.error("Firebase connection error:", error);
-            // Alert hata kar UI me error dikhaya hai
-            errorMsg.textContent = "Database se connect nahi ho pa raha hai.";
-            nameInput.disabled = true;
-            secretCodeInput.disabled = true;
-            loginBtn.disabled = true;
-            loginBtn.textContent = "Connection Failed";
-            loginBtn.classList.remove('bg-pink-600', 'hover:bg-pink-700');
-            loginBtn.classList.add('bg-red-700', 'cursor-not-allowed');
+        // --- DOM ELEMENTS ---
+        const menuScreen = document.getElementById('menu-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const createGameBtn = document.getElementById('create-game-btn');
+        const joinGameBtn = document.getElementById('join-game-btn');
+        const gameIdInput = document.getElementById('game-id-input');
+        const gameIdDisplay = document.getElementById('game-id-display');
+        const copyIdBtn = document.getElementById('copy-id-btn');
+        const statusText = document.getElementById('status-text');
+        const gameBoard = document.getElementById('game-board');
+        const newGameBtn = document.getElementById('new-game-btn');
+        
+        // --- FIREBASE SETUP ---
+        let db, auth;
+        let currentUser = null;
+        let gameUnsubscribe = null; // To stop listening to game updates
+
+        // Use pre-configured firebase config and auth token if available
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIza...", authDomain: "...", projectId: "..." };
+
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        // --- AUTHENTICATION ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                try {
+                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch(e) {
+                    console.error("Authentication Error: ", e);
+                    statusText.textContent = "Authentication failed. Please refresh.";
+                }
+            }
+        });
+
+
+        // --- GAME LOGIC ---
+        let playerSymbol = '';
+        let currentGameId = '';
+
+        // Function to create game board cells
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell', 'w-full', 'h-full', 'flex', 'items-center', 'justify-center', 'text-6xl', 'font-bold', 'bg-gray-700', 'rounded-lg', 'cursor-pointer');
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                gameBoard.appendChild(cell);
+            }
         }
 
-        function handleLogin() {
-            const name = nameInput.value.trim();
-            const code = secretCodeInput.value.trim();
-            if (!name || !code) { errorMsg.textContent = "Naam aur code, dono daalo."; return; }
-            if (code !== SECRET_CODE) { errorMsg.textContent = "Secret code galat hai!"; return; }
-            currentUserName = name;
-            loginContainer.classList.add('hidden');
-            chatContainer.classList.remove('hidden');
-            chatContainer.classList.add('flex');
-            welcomeMsg.textContent = `Aapka Swagat Hai, ${currentUserName}!`;
-            listenForMessages();
-        }
+        async function createNewGame() {
+            if (!currentUser) { alert("Pehle authenticate ho raha hai..."); return; }
+            
+            const gameId = Math.random().toString(36).substr(2, 6).toUpperCase();
+            currentGameId = gameId;
+            playerSymbol = 'X';
 
-        async function sendMessage() {
-            const text = messageInput.value.trim();
-            if (text === "" || !messagesCollection) return;
+            const gameRef = doc(db, `/artifacts/${appId}/public/data/tic-tac-toe-games`, gameId);
+            
             try {
-                await addDoc(messagesCollection, { sender: currentUserName, text: text, timestamp: serverTimestamp() });
-                messageInput.value = "";
-            } catch (error) { console.error("Error sending message: ", error); }
+                await setDoc(gameRef, {
+                    board: Array(9).fill(''),
+                    players: [currentUser.uid],
+                    currentPlayerIndex: 0,
+                    status: 'waiting', // 'waiting', 'playing', 'finished'
+                    winner: null, // 'X', 'O', 'draw'
+                    createdAt: new Date()
+                });
+                
+                showGameScreen(gameId);
+                listenToGameUpdates(gameId);
+            } catch (error) {
+                console.error("Game banane mein error: ", error);
+                alert("Game banane mein error aaya. Please dobara try karein.");
+            }
         }
-        
-        function listenForMessages() {
-            // orderBy hata diya hai taaki console me error na aaye
-            const q = query(messagesCollection);
-            onSnapshot(q, (snapshot) => {
-                const isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 1;
-                
-                // Messages ko code me hi sort kar rahe hain
-                const messages = [];
-                snapshot.forEach((doc) => {
-                    messages.push(doc.data());
-                });
 
-                messages.sort((a, b) => {
-                    const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
-                    const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
-                    return timeA - timeB;
+        async function joinGame() {
+            if (!currentUser) { alert("Pehle authenticate ho raha hai..."); return; }
+
+            const gameId = gameIdInput.value.trim().toUpperCase();
+            if (!gameId) { alert("Please Game ID daalein."); return; }
+
+            const gameRef = doc(db, `/artifacts/${appId}/public/data/tic-tac-toe-games`, gameId);
+            const gameSnap = await getDoc(gameRef);
+
+            if (!gameSnap.exists()) {
+                alert("Game ID galat hai!");
+                return;
+            }
+
+            const gameData = gameSnap.data();
+
+            if (gameData.players.length >= 2 && !gameData.players.includes(currentUser.uid)) {
+                alert("Game pehle se full hai!");
+                return;
+            }
+
+            currentGameId = gameId;
+            
+            if(!gameData.players.includes(currentUser.uid)) {
+                 await updateDoc(gameRef, {
+                    players: [...gameData.players, currentUser.uid],
+                    status: 'playing'
                 });
-                
-                chatMessages.innerHTML = '';
-                messages.forEach((msg) => displayMessage(msg));
-                
-                if (isScrolledToBottom) { chatMessages.scrollTop = chatMessages.scrollHeight; }
+                 playerSymbol = 'O';
+            } else {
+                 playerSymbol = gameData.players[0] === currentUser.uid ? 'X' : 'O';
+            }
+
+            showGameScreen(gameId);
+            listenToGameUpdates(gameId);
+        }
+
+        function listenToGameUpdates(gameId) {
+            if (gameUnsubscribe) gameUnsubscribe(); // Stop listening to old game
+            
+            const gameRef = doc(db, `/artifacts/${appId}/public/data/tic-tac-toe-games`, gameId);
+            gameUnsubscribe = onSnapshot(gameRef, (doc) => {
+                const gameData = doc.data();
+                if (gameData) {
+                    updateUI(gameData);
+                }
             });
         }
 
-        function displayMessage({ sender, text, timestamp }) {
-            const isMe = sender === currentUserName;
-            let timeString = '';
-            if (timestamp && timestamp.toDate) { timeString = timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `flex items-end gap-2 fade-in ${isMe ? 'justify-end' : 'justify-start'}`;
-            messageDiv.innerHTML = `<div class="max-w-xs md:max-w-md"><div class="px-4 py-2 rounded-2xl ${isMe ? 'bg-pink-600 rounded-br-none' : 'bg-gray-700 rounded-bl-none'}"><p class="text-sm font-bold text-white ${isMe ? 'hidden' : ''}">${sender}</p><p class="text-white break-words">${text}</p><p class="text-xs text-gray-300 mt-1 ${isMe ? 'text-right' : 'text-left'}">${timeString}</p></div></div>`;
-            chatMessages.appendChild(messageDiv);
+        function updateUI(gameData) {
+            // Update board
+            const cells = gameBoard.querySelectorAll('.cell');
+            gameData.board.forEach((symbol, index) => {
+                cells[index].textContent = symbol;
+                if(symbol === 'X') cells[index].classList.add('text-red-400');
+                if(symbol === 'O') cells[index].classList.add('text-blue-400');
+            });
+
+            const myTurn = gameData.players[gameData.currentPlayerIndex] === currentUser.uid;
+
+            // Update status text and board state
+            if (gameData.status === 'waiting') {
+                statusText.textContent = "Dost ka intezar hai...";
+                gameBoard.classList.add('disabled');
+            } else if (gameData.status === 'playing') {
+                 if (myTurn) {
+                    statusText.innerHTML = `Aapki chaal hai <span class="font-bold text-2xl ${playerSymbol === 'X' ? 'text-red-400' : 'text-blue-400'}">(${playerSymbol})</span>`;
+                    gameBoard.classList.remove('disabled');
+                } else {
+                    statusText.textContent = "Dost ki chaal hai...";
+                    gameBoard.classList.add('disabled');
+                }
+            } else if (gameData.status === 'finished') {
+                gameBoard.classList.add('disabled');
+                newGameBtn.classList.remove('hidden');
+                if (gameData.winner === 'draw') {
+                    statusText.textContent = "Game Draw!";
+                } else {
+                    const amIWinner = gameData.players.indexOf(currentUser.uid) === (gameData.winner === 'X' ? 0 : 1);
+                    statusText.textContent = amIWinner ? "Aap Jeet Gaye! 🎉" : "Aap Haar Gaye 😞";
+                }
+            }
+        }
+        
+        async function handleCellClick(event) {
+            const cellIndex = parseInt(event.target.dataset.index);
+            const gameRef = doc(db, `/artifacts/${appId}/public/data/tic-tac-toe-games`, currentGameId);
+            const gameSnap = await getDoc(gameRef);
+            const gameData = gameSnap.data();
+
+            // Check if move is valid
+            if (gameData.board[cellIndex] !== '' || gameData.status !== 'playing' || gameData.players[gameData.currentPlayerIndex] !== currentUser.uid) {
+                return;
+            }
+
+            // Update board
+            const newBoard = [...gameData.board];
+            newBoard[cellIndex] = playerSymbol;
+            
+            // Check for winner
+            const winnerInfo = checkWinner(newBoard);
+            
+            const updatePayload = {
+                board: newBoard,
+                currentPlayerIndex: (gameData.currentPlayerIndex + 1) % 2
+            };
+
+            if (winnerInfo.winner) {
+                updatePayload.status = 'finished';
+                updatePayload.winner = winnerInfo.winner;
+            }
+
+            await updateDoc(gameRef, updatePayload);
+        }
+        
+        function checkWinner(board) {
+            const winningCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]  // diagonals
+            ];
+
+            for (const combo of winningCombos) {
+                const [a, b, c] = combo;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return { winner: board[a] };
+                }
+            }
+
+            if (board.every(cell => cell !== '')) {
+                return { winner: 'draw' };
+            }
+
+            return { winner: null };
         }
 
-        loginBtn.addEventListener('click', handleLogin);
-        secretCodeInput.addEventListener('keyup', (e) => e.key === 'Enter' && handleLogin());
-        sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keyup', (e) => e.key === 'Enter' && sendMessage());
+        // --- UI FLOW ---
+        function showGameScreen(gameId) {
+            createBoard();
+            gameIdDisplay.textContent = gameId;
+            menuScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+        }
+
+        function resetToMenu() {
+            if (gameUnsubscribe) gameUnsubscribe();
+            menuScreen.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+            gameIdInput.value = '';
+            newGameBtn.classList.add('hidden');
+        }
+
+        // --- EVENT LISTENERS ---
+        createGameBtn.addEventListener('click', createNewGame);
+        joinGameBtn.addEventListener('click', joinGame);
+        newGameBtn.addEventListener('click', resetToMenu);
+        copyIdBtn.addEventListener('click', () => {
+            // Using document.execCommand for wider compatibility in iframes
+            const tempInput = document.createElement('textarea');
+            tempInput.value = currentGameId;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                copyIdBtn.textContent = 'Copied!';
+                setTimeout(() => { copyIdBtn.textContent = 'Copy'; }, 2000);
+            } catch (err) {
+                console.error('Copy failed', err);
+                alert('ID copy nahi ho paya. Please manually copy karein.');
+            }
+            document.body.removeChild(tempInput);
+        });
+
     </script>
 </body>
 </html>
-
